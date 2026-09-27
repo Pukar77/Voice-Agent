@@ -1,0 +1,15 @@
+assemblyai
+requests
+pyaudio
+python-dotenv
+pdfplumber
+qdrant-client
+langchain-qdrant
+langchain-huggingface
+langchain-text-splitters
+sentence-transformers
+langchain_groq
+fastapi
+uvicorn
+fastapi
+edge-tts
