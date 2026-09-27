@@ -1,3 +1,4 @@
+import functools
 import os
 
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ load_dotenv()
 
 
 COLLECTION_NAME = "chunks for voice agent"
+TOP_K = 5
 
 
 def _get_embeddings():
@@ -18,9 +20,13 @@ def _get_embeddings():
     )
 
 
+@functools.lru_cache(maxsize=1)
 def get_vectorstore():
     """
     Connect to the existing Qdrant collection.
+
+    Cached: building the embeddings model takes a few seconds, and the
+    collection is read-only for retrieval, so one instance is shared.
     """
 
     qdrant_url = os.getenv("QDRANT_URL")
@@ -49,6 +55,7 @@ def get_vectorstore():
     )
 
 
+@functools.lru_cache(maxsize=1)
 def get_retrieval():
     """
     Return a retriever that searches chunks stored in Qdrant.
@@ -59,7 +66,7 @@ def get_retrieval():
     retriever = vectorstore.as_retriever(
         search_type="similarity",
         search_kwargs={
-            "k": 5
+            "k": TOP_K
         },
     )
 
