@@ -1,0 +1,140 @@
+/* ------------------------------------------------------------------ *
+ * Design tokens — a light, airy palette built on soft indigo / sky.
+ * ------------------------------------------------------------------ */
+
+:root {
+  /* The page itself carries colour, so every white surface reads as a
+     surface instead of dissolving into the background. */
+  --bg: #dfe6f5;
+  --bg-2: #eaeff9;
+  --card: #ffffff;
+  --card-solid: #ffffff;
+  --tint: #f6f8fd;
+  --line: rgba(15, 23, 42, 0.11);
+  --line-strong: rgba(15, 23, 42, 0.2);
+
+  --ink: #0f172a;
+  --ink-soft: #334155;
+  --muted: #5b6880;
+  --faint: #8e9ab0;
+
+  --accent: #4f46e5;
+  --accent-2: #0ea5e9;
+  --accent-3: #8b5cf6;
+  --accent-grad: linear-gradient(135deg, #4f46e5 0%, #6366f1 45%, #0ea5e9 100%);
+
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+
+  --tint-user: #dfe6ff;
+  --tint-agent: #ffffff;
+
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.07);
+  --shadow-md: 0 14px 34px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 24px 60px rgba(79, 70, 229, 0.2);
+
+  --radius: 18px;
+  --radius-lg: 26px;
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reset + base
+ * ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family:
+    'Inter',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 620px at 12% -8%, #c6d4ff 0%, rgba(198, 212, 255, 0) 62%),
+    radial-gradient(900px 540px at 92% 4%, #d9d0ff 0%, rgba(217, 208, 255, 0) 58%),
+    radial-gradient(1000px 700px at 50% 110%, #b9e4fb 0%, rgba(185, 228, 251, 0) 60%),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* Thin, unobtrusive scrollbars so panels feel lighter than the page. */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

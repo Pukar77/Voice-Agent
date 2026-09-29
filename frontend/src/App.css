@@ -1,0 +1,1149 @@
+/* ================================================================== *
+ * Layout
+ * ================================================================== */
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1160px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 30px 22px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Soft blurred colour fields floating behind everything.
+   z-index: -1 is load-bearing — at z-index: 0 these would paint *over* the
+   in-flow content (positioned elements sit above non-positioned ones), which
+   washed the right-aligned user bubbles out with a pale blur. */
+
+.glow {
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(95px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.glow--one {
+  width: 440px;
+  height: 440px;
+  top: -140px;
+  left: -110px;
+  background: #c7d2fe;
+}
+
+.glow--two {
+  width: 400px;
+  height: 400px;
+  top: 34%;
+  right: -150px;
+  background: #bae6fd;
+}
+
+.glow--three {
+  width: 480px;
+  height: 480px;
+  bottom: -190px;
+  left: 26%;
+  background: #ddd6fe;
+}
+
+/* ================================================================== *
+ * Working area — conversation left, controls always in reach right
+ * ================================================================== */
+
+.main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.transcript {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  position: sticky;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  /* Solid, no backdrop-filter: white-on-white mush and compositing haze
+     are both worse than a plain, crisply bordered surface. */
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+/* The orb sits at the top of the panel, so it needs no extra breathing room. */
+
+.panel .hero {
+  padding: 0;
+}
+
+/* ================================================================== *
+ * Header
+ * ================================================================== */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 2px 4px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.brand__mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: var(--accent-grad);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.35);
+  animation: float 5s ease-in-out infinite;
+}
+
+.brand__text h1 {
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.022em;
+}
+
+.subtitle {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.header__side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1.5px solid var(--line-strong);
+  box-shadow: var(--shadow-sm);
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.chip svg {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ *
+ * Status pill — colour carries the state, so it never needs a legend.
+ * ------------------------------------------------------------------ */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1.5px solid transparent;
+  transition: background 0.25s, color 0.25s;
+}
+
+.pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill--idle {
+  background: #fff;
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+
+.pill--connecting {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.22);
+  color: #334155;
+}
+
+.pill--connecting .pill__dot {
+  animation: ping 1.1s ease-out infinite;
+}
+
+.pill--listening {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.pill--listening .pill__dot {
+  animation: ping 1.4s ease-out infinite;
+}
+
+.pill--thinking {
+  background: #f3e8ff;
+  border-color: #e9d5ff;
+  color: #6d28d9;
+}
+
+.pill--thinking .pill__dot {
+  animation: ping 1s ease-out infinite;
+}
+
+.pill--speaking {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.pill--speaking .pill__dot {
+  animation: ping 1.2s ease-out infinite;
+}
+
+/* ================================================================== *
+ * Error toast
+ * ================================================================== */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+  border: 1px solid #fecdd3;
+  box-shadow: var(--shadow-md);
+  animation: slide-in 0.3s ease-out;
+}
+
+.toast__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--bad);
+  box-shadow: var(--shadow-sm);
+}
+
+.toast__text {
+  flex: 1;
+  font-size: 14px;
+  color: #9f1239;
+}
+
+.toast__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #be123c;
+  transition: background 0.18s;
+}
+
+.toast__close:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* ================================================================== *
+ * Hero — orb + caption
+ * ================================================================== */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 0 6px;
+  text-align: center;
+}
+
+.hero__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero__caption {
+  font-size: 17.5px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.hero__hint {
+  font-size: 13.5px;
+  color: var(--muted);
+  max-width: 460px;
+}
+
+/* ------------------------------------------------------------------ *
+ * The orb
+ * ------------------------------------------------------------------ */
+
+.orb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.orb {
+  position: relative;
+  width: 138px;
+  height: 138px;
+  display: grid;
+  place-items: center;
+  animation: float 6s ease-in-out infinite;
+}
+
+.orb__halo {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0) 68%);
+  filter: blur(10px);
+  transition: background 0.4s;
+}
+
+.orb__core {
+  position: relative;
+  z-index: 2;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.16),
+    inset 0 6px 14px rgba(255, 255, 255, 0.35),
+    0 16px 34px rgba(79, 70, 229, 0.34);
+  transition: background 0.4s, box-shadow 0.4s;
+}
+
+.orb__ring {
+  position: absolute;
+  inset: 4px;
+  z-index: 1;
+  border-radius: 50%;
+  border: 2px solid rgba(99, 102, 241, 0.55);
+  opacity: 0;
+}
+
+.orb__ring--second {
+  inset: -6px;
+}
+
+/* Listening: two rings ripple outward. */
+
+.orb-wrap--listening .orb__ring {
+  animation: ripple 1.9s ease-out infinite;
+}
+
+.orb-wrap--listening .orb__ring--second {
+  animation-delay: 0.65s;
+}
+
+.orb-wrap--listening .orb__core {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.16),
+    inset 0 6px 14px rgba(255, 255, 255, 0.35),
+    0 16px 34px rgba(14, 165, 233, 0.4);
+}
+
+.orb-wrap--listening .orb__halo {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(56, 189, 248, 0) 68%);
+}
+
+/* Speaking: emerald + a stronger bloom. */
+
+.orb-wrap--speaking .orb__ring {
+  border-color: rgba(16, 185, 129, 0.5);
+  animation: ripple 1.5s ease-out infinite;
+}
+
+.orb-wrap--speaking .orb__ring--second {
+  animation-delay: 0.5s;
+}
+
+.orb-wrap--speaking .orb__core {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.16),
+    inset 0 6px 14px rgba(255, 255, 255, 0.35),
+    0 18px 40px rgba(16, 185, 129, 0.42);
+}
+
+.orb-wrap--speaking .orb__halo {
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.45) 0%, rgba(52, 211, 153, 0) 68%);
+}
+
+/* Thinking: violet, with a rotating arc instead of rings. */
+
+.orb-wrap--thinking .orb__core {
+  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.16),
+    inset 0 6px 14px rgba(255, 255, 255, 0.35),
+    0 16px 34px rgba(124, 58, 237, 0.36);
+}
+
+.orb-wrap--thinking .orb__halo {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0) 68%);
+}
+
+.orb-wrap--thinking .orb__ring {
+  border-color: rgba(167, 139, 250, 0.75);
+  border-top-color: transparent;
+  opacity: 1;
+  animation: spin 1.1s linear infinite;
+}
+
+.orb-wrap--thinking .orb__ring--second {
+  animation: spin 1.8s linear infinite reverse;
+}
+
+/* Connecting: neutral grey with a spinner arc. */
+
+.orb-wrap--connecting .orb__core {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.18),
+    inset 0 6px 14px rgba(255, 255, 255, 0.3),
+    0 16px 34px rgba(100, 116, 139, 0.34);
+}
+
+.orb-wrap--connecting .orb__ring {
+  border-color: rgba(148, 163, 184, 0.75);
+  border-top-color: transparent;
+  opacity: 1;
+  animation: spin 0.9s linear infinite;
+}
+
+/* Muted: warm amber so it reads as "off" at a glance. */
+
+.orb-wrap--muted .orb__core {
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+  box-shadow:
+    inset 0 -8px 18px rgba(15, 23, 42, 0.18),
+    inset 0 6px 14px rgba(255, 255, 255, 0.35),
+    0 16px 34px rgba(217, 119, 6, 0.36);
+}
+
+.orb-wrap--muted .orb__halo {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.45) 0%, rgba(251, 191, 36, 0) 68%);
+}
+
+/* Three dots for "thinking", fallback glyph for everything else. */
+
+.orb__dots {
+  display: flex;
+  gap: 7px;
+}
+
+.orb__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+.orb__dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.orb__dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.orb__spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ------------------------------------------------------------------ *
+ * Waveform strip under the orb
+ * ------------------------------------------------------------------ */
+
+.wave {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 44px;
+  padding: 0 4px;
+}
+
+.wave__bar {
+  width: 6px;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  opacity: 0.32;
+  transform: scaleY(0.45);
+  transition: opacity 0.3s;
+}
+
+.wave--active .wave__bar {
+  opacity: 0.85;
+  animation: bar-wave 1.1s ease-in-out infinite;
+}
+
+/* ================================================================== *
+ * Cards (transcript + composer)
+ * ================================================================== */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 20px;
+  background: linear-gradient(90deg, #f5f8ff 0%, #ffffff 70%);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.card__head h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.card__meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Transcript
+ * ------------------------------------------------------------------ */
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* The one surface that scrolls text: solid, never translucent or
+     backdrop-filtered, so glyphs never get caught in a compositing layer. */
+  background: #fff;
+  overflow: hidden;
+}
+
+.transcript__body {
+  flex: 1 1 auto;
+  min-height: 180px;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  /* Tinted, not white: white agent bubbles and indigo user bubbles both
+     need something to sit against. */
+  background: var(--tint);
+  scroll-behavior: smooth;
+}
+
+.empty {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+  animation: fade-in 0.4s ease-out;
+}
+
+.empty__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+  color: var(--accent);
+  margin-bottom: 4px;
+  animation: float 4.5s ease-in-out infinite;
+}
+
+.empty__title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.empty__sub {
+  font-size: 13.5px;
+  color: var(--muted);
+  max-width: 340px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Bubbles
+ * ------------------------------------------------------------------ */
+
+.bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: slide-in 0.28s ease-out;
+}
+
+.bubble--user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar--user {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #4338ca;
+}
+
+.avatar--agent {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #047857;
+}
+
+.bubble__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 76%;
+  padding: 10px 14px;
+  border-radius: 17px;
+  border: 1px solid var(--line);
+  background: var(--card-solid);
+  box-shadow: var(--shadow-sm);
+}
+
+.bubble--user .bubble__body {
+  /* Deeper tint + navy ink: the request must stay legible even at a glance. */
+  background: linear-gradient(135deg, #dfe6ff 0%, #d3e6fe 100%);
+  border-color: rgba(79, 70, 229, 0.32);
+  border-top-right-radius: 6px;
+  box-shadow:
+    inset -3px 0 0 rgba(79, 70, 229, 0.75),
+    var(--shadow-sm);
+}
+
+.bubble--user .bubble__body p {
+  color: var(--ink);
+  font-weight: 480;
+}
+
+.bubble--agent .bubble__body {
+  border-top-left-radius: 6px;
+}
+
+.bubble__who {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bubble--user .bubble__who {
+  text-align: right;
+  color: #47567f;
+}
+
+.bubble__body p {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubble--thinking .bubble__body {
+  background: #faf5ff;
+  border-color: rgba(124, 58, 237, 0.22);
+}
+
+.bubble--partial .bubble__body {
+  border-style: dashed;
+  opacity: 0.95;
+}
+
+.bubble--partial .bubble__body p {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.bubble__live {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 9.5px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Thinking indicator */
+
+.dots {
+  display: flex;
+  gap: 6px;
+  padding: 6px 2px;
+}
+
+.dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.55;
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+/* ================================================================== *
+ * Controls
+ * ================================================================== */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.talk {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px 38px;
+  border-radius: 999px;
+  background: var(--accent-grad);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 680;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.talk:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.1);
+}
+
+.talk:active {
+  transform: translateY(0);
+}
+
+.talk--active {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+  box-shadow: 0 22px 50px rgba(244, 63, 94, 0.35);
+}
+
+.talk__icon {
+  display: grid;
+  place-items: center;
+}
+
+.talk__pulse {
+  position: absolute;
+  inset: -7px;
+  border-radius: 999px;
+  border: 2px solid rgba(244, 63, 94, 0.55);
+  animation: ripple 1.7s ease-out infinite;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 19px;
+  border-radius: 999px;
+  background: #eef2f9;
+  border: 1.5px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 650;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s ease, border-color 0.16s ease, color 0.16s ease,
+    background 0.16s ease;
+}
+
+.ghost:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #e5ebf7;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Disabled must stay readable — dashed + muted reads as "unavailable"
+   without the button dissolving into the surface behind it. */
+.ghost:disabled {
+  background: #f2f5fa;
+  border: 1.5px dashed rgba(15, 23, 42, 0.24);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.ghost--on {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.ghost--on:hover:not(:disabled) {
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* In the side panel the buttons stack: Talk spans the full width, the
+   quieter actions share the row underneath. */
+
+.panel .controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.panel .talk {
+  grid-column: 1 / -1;
+  width: 100%;
+  justify-content: center;
+}
+
+.panel .ghost {
+  justify-content: center;
+}
+
+/* ================================================================== *
+ * Composer
+ * ================================================================== */
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px 9px 20px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.composer:focus-within,
+.panel .composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16), var(--shadow-md);
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 11px 0;
+  font-size: 15px;
+  outline: none;
+}
+
+.composer input::placeholder {
+  color: #74809a;
+}
+
+.composer__send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: var(--accent-grad);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 650;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  transition: transform 0.16s ease, opacity 0.16s ease;
+}
+
+.composer__send:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.composer__send:disabled {
+  /* A grey, obviously-inactive button instead of a faded-to-nothing one. */
+  background: #cbd5e1;
+  color: #f1f5f9;
+  box-shadow: none;
+  opacity: 1;
+}
+
+/* Inside the panel it hugs its content as a pill on the panel's own surface. */
+
+.panel .composer {
+  background: var(--tint);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  padding: 6px 6px 6px 16px;
+}
+
+.panel .composer input {
+  padding: 8px 0;
+  font-size: 14.5px;
+}
+
+/* ================================================================== *
+ * Footer
+ * ================================================================== */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--muted);
+  padding-top: 2px;
+}
+
+.footer__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  animation: ping 2.4s ease-out infinite;
+}
+
+/* ================================================================== *
+ * Keyframes
+ * ================================================================== */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bar-wave {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ================================================================== *
+ * Responsive
+ * ================================================================== */
+
+/* Stack the panel above the conversation so Talk stays reachable
+   without scrolling on narrow screens. */
+
+@media (max-width: 980px) {
+  .main {
+    flex: none;
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    grid-column: 1;
+    grid-row: 1;
+    position: static;
+  }
+
+  .transcript {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .transcript__body {
+    flex: none;
+    height: clamp(220px, 40vh, 380px);
+  }
+}
+
+@media (max-width: 680px) {
+  .app {
+    padding: 22px 14px 36px;
+    gap: 15px;
+  }
+
+  .brand__text h1 {
+    font-size: 17px;
+  }
+
+  .hero {
+    padding-top: 10px;
+  }
+
+  .orb {
+    width: 118px;
+    height: 118px;
+  }
+
+  .orb__core {
+    width: 100px;
+    height: 100px;
+  }
+
+  .bubble__body {
+    max-width: 84%;
+  }
+
+  .transcript__body {
+    height: clamp(210px, 34vh, 300px);
+    padding: 14px;
+  }
+
+  .talk {
+    padding: 14px 30px;
+    font-size: 15px;
+  }
+
+  .ghost span {
+    display: none;
+  }
+
+  .ghost {
+    padding: 13px;
+  }
+}

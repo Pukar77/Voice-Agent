@@ -7,6 +7,8 @@ Public API:
     speak(text)              -> stream the audio to your speakers, block until done
     speak_async(text)        -> awaitable version, for use inside an event loop
     save(text, path)         -> write an mp3 file instead of playing it
+    synthesize_stream(text)  -> async generator of mp3 bytes, for sending
+                                the audio somewhere else (e.g. a browser)
 
 Demo:
     python -m TTS.tts
@@ -109,6 +111,26 @@ async def speak_async(text, voice=DEFAULT_VOICE):
         if player.stdin and not player.stdin.closed:
             player.stdin.close()
         player.wait()
+
+
+async def synthesize_stream(text, voice=DEFAULT_VOICE):
+    """
+    Yield mp3 bytes for `text` as edge-tts produces them.
+
+    Nothing is played and nothing touches the disk: whoever consumes this
+    decides where the audio goes. The voice server forwards each chunk to
+    the browser as soon as it arrives, so playback starts long before
+    synthesis has finished.
+    """
+    text = (text or "").strip()
+    if not text:
+        return
+
+    communicate = edge_tts.Communicate(text, voice)
+
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio" and chunk.get("data"):
+            yield chunk["data"]
 
 
 def speak(text, voice=DEFAULT_VOICE):
