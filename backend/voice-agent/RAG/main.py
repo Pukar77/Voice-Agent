@@ -14,6 +14,7 @@ import asyncio
 import base64
 import json
 import os
+import socket
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -42,6 +43,11 @@ ALLOWED_ORIGINS = [
 # Pause between "answer fully played" and "listen again", so the tail of the
 # agent's own voice cannot be picked up as a new question.
 LISTEN_AGAIN_DELAY = 0.35
+
+# Where the server listens. Override when the port is already taken:
+#   PORT=8001 python -m RAG.main
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8000"))
 
 
 # ---------------------------------------------------------
@@ -414,13 +420,47 @@ async def voice_socket(ws: WebSocket):
 # Run Application
 # ---------------------------------------------------------
 
+def _port_taken(host, port):
+    """
+    Is something already listening on `host:port`?
+
+    Probed by connecting, not by binding: on Windows SO_REUSEADDR lets a
+    second bind succeed, which would hide the clash until uvicorn dies with
+    WinError 10048.
+    """
+
+    target = "127.0.0.1" if host in ("0.0.0.0", "::") else host
+
+    with socket.socket() as probe:
+        probe.settimeout(0.5)
+        return probe.connect_ex((target, port)) == 0
+
+
+def _explain_port_clash(port):
+    """Turn WinError 10048 / EADDRINUSE into something actionable."""
+
+    print(f"\nPort {port} is already in use - another voice server is running.")
+    print("The new process cannot take the port, and the browser keeps talking")
+    print("to the first one, so backend edits look like they did nothing.")
+    print("Stop the old process first:\n")
+    print(f"    Windows    netstat -ano | findstr :{port}")
+    print("               taskkill /F /PID <pid>")
+    print(f"    macOS/Linux  lsof -ti tcp:{port} | xargs kill\n")
+    print(f"Or listen somewhere else:  PORT={port + 1} python -m RAG.main")
+    print(f"  (then point the frontend at it: VITE_BACKEND=http://localhost:{port + 1})\n")
+
+
 def main():
     import uvicorn
 
+    if _port_taken(HOST, PORT):
+        _explain_port_clash(PORT)
+        raise SystemExit(1)
+
     uvicorn.run(
         "RAG.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=HOST,
+        port=PORT,
         reload=False,
     )
 

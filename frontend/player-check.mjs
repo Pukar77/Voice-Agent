@@ -72,6 +72,8 @@ class FakeAudio extends FakeEventTarget {
     this.paused = true
     this.src = ''
     this.playCalls = 0
+    this.currentTime = 0
+    this.ended = false
   }
   play() {
     this.playCalls += 1
@@ -153,6 +155,32 @@ const audio = player.audio
 player.reset()
 check('audio paused on reset', audio.paused === true)
 check('reset marks drained', player.drained === true)
+
+// ---- the element never reports "ended" --------------------------------
+// Not every browser fires `ended` for a MediaSource stream. If that signal
+// is missed the session would sit in "speaking" forever with the microphone
+// muted, so the player has to finish the reply on its own.
+let silentDrained = false
+const silent = new Player({ onDrained: () => (silentDrained = true) })
+silent.push(b64(30))
+silent.finish()
+await sleep(300)
+check('still speaking right after finish', silentDrained === false)
+await sleep(1200)
+check('drains when "ended" never arrives', silentDrained === true)
+check('stream released by the guard', silent.audio === null)
+
+// ---- a reply that is still playing is not cut off ----------------------
+let liveDrained = false
+const live = new Player({ onDrained: () => (liveDrained = true) })
+live.push(b64(40))
+live.finish()
+live.audio.currentTime = 4 // the element really is playing
+await sleep(1300) // past the point the guard first fires
+check('guard re-arms while audio is still playing', liveDrained === false)
+live.audio.paused = true // playback stops on its own
+await sleep(1300)
+check('drains once playback stops', liveDrained === true)
 
 // ---- fallback mode ----------------------------------------------------
 FakeMediaSource.supported = false

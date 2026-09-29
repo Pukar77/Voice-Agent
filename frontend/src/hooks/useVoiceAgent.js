@@ -204,6 +204,15 @@ export function useVoiceAgent() {
       socket.onclose = () => {
         if (socketRef.current === socket) {
           socketRef.current = null
+
+          // No more audio can arrive on a closed socket, so stop whatever is
+          // still playing: otherwise `playing` stays true and the session is
+          // stuck on "speaking" (which also keeps the microphone muted).
+          const player = playerRef.current
+          playerRef.current = null
+          if (player) player.reset()
+          setPlayingState(false)
+
           applyServerState(IDLE)
         }
       }

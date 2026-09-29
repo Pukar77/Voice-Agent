@@ -16,6 +16,15 @@
 
 const MP3_MIME = 'audio/mpeg'
 
+// How long after the buffered audio should have run out the reply is declared
+// finished anyway. `ended` normally arrives first; this only covers the cases
+// where it does not (see #armDrainGuard).
+const DRAIN_GRACE = 1.0
+
+// How much `currentTime` has to move between two guard checks to count as
+// "still playing", in seconds.
+const CLOCK_EPSILON = 0.05
+
 function base64ToArrayBuffer(base64) {
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
@@ -60,6 +69,10 @@ export class Player {
 
     this.started = false
     this.drained = true
+
+    // Drain guard (see #armDrainGuard)
+    this.drainTimer = null
+    this.guardTime = 0
   }
 
   get playing() {
@@ -72,6 +85,10 @@ export class Player {
 
     this.started = true
     this.drained = false
+
+    // This is a new reply: a guard armed for the previous one no longer
+    // describes what is playing.
+    this.#clearDrainGuard()
 
     if (this.streaming) this.#pushFragment(bytes)
     else this.#pushBuffer(bytes)
@@ -86,6 +103,10 @@ export class Player {
       this.#pump()
     }
     // Fallback mode drains itself when the last scheduled buffer ends.
+
+    // Neither mode may wait forever for a signal the browser might never
+    // send: arm the guard instead.
+    this.#armDrainGuard()
   }
 
   /** Stop immediately and release everything, e.g. when the session ends. */
@@ -96,11 +117,13 @@ export class Player {
     this.tail = 0
     this.chain = Promise.resolve()
 
+    this.#clearDrainGuard()
     this.#teardownStream()
   }
 
   #teardownStream() {
     this.pending.length = 0
+    this.#clearDrainGuard()
     this.noMoreComing = false
     this.streamFinished = false
     this.playRequested = false
@@ -137,6 +160,84 @@ export class Player {
     if (this.drained) return
     this.drained = true
     this.onDrained?.()
+  }
+
+  // ---------------------------------------------------------------
+  // Drain guard
+  // ---------------------------------------------------------------
+
+  /**
+   * Make sure "the reply has finished" is announced even when the browser
+   * never fires `ended`.
+   *
+   * `ended` is the normal signal, but it is not guaranteed: a media element
+   * whose play() is still waiting on a gesture, or a SourceBuffer that stops
+   * firing `updateend`, leaves the element looking like it is playing
+   * forever. The session would then stay in "speaking" and never unmute the
+   * microphone again, so the guard waits out the audio that is *still
+   * buffered* and then declares the reply over by itself.
+   */
+  #armDrainGuard() {
+    this.#clearDrainGuard()
+
+    const { audio } = this
+    // An element that has not started yet may not report a clock at all; treat
+    // that as "the guard cannot tell" and let it declare the reply over.
+    this.guardTime = audio ? Number(audio.currentTime) || 0 : 0
+
+    const seconds = this.#remainingSeconds() + DRAIN_GRACE
+
+    this.drainTimer = setTimeout(() => this.#checkDrained(), seconds * 1000)
+  }
+
+  #clearDrainGuard() {
+    if (this.drainTimer !== null) {
+      clearTimeout(this.drainTimer)
+      this.drainTimer = null
+    }
+  }
+
+  #checkDrained() {
+    this.drainTimer = null
+
+    if (this.drained) return
+
+    const { audio } = this
+    const playing = Boolean(audio) && !audio.paused && !audio.ended
+    const advanced = Boolean(audio) && Number(audio.currentTime) > this.guardTime + CLOCK_EPSILON
+
+    // Genuinely still playing - it may simply have started late - so give it
+    // the time this round of audio still needs.
+    if (this.streaming ? playing && advanced : this.inFlight > 0) {
+      this.#armDrainGuard()
+      return
+    }
+
+    // Nothing is coming out of the speakers any more.
+    this.#teardownStream()
+    this.#drain()
+  }
+
+  /** Seconds of audio that have been buffered but not played yet. */
+  #remainingSeconds() {
+    if (!this.streaming) {
+      // Fallback mode schedules decoded buffers on the audio clock.
+      if (!this.context) return 0
+      return Math.max(0, this.tail - this.context.currentTime)
+    }
+
+    const { audio } = this
+    if (!audio || !audio.buffered) return 0
+
+    const { currentTime, buffered } = audio
+
+    for (let i = 0; i < buffered.length; i += 1) {
+      if (currentTime >= buffered.start(i) && currentTime <= buffered.end(i)) {
+        return Math.max(0, buffered.end(i) - currentTime)
+      }
+    }
+
+    return 0
   }
 
   // ---------------------------------------------------------------

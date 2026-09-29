@@ -3,6 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import os
+import re
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -24,6 +25,21 @@ def format_docs(docs):
     return "\n\n".join([doc.page_content for doc in docs])
 
 
+# The model answers in markdown ("The CEO is **Jane Doe**."). Those markers
+# show up literally in the transcript pane, and edge-tts reads the asterisks
+# out loud, so they are removed where the answer is built: terminal, browser
+# and voice all get the same plain sentence.
+#
+# Single underscores are deliberately left alone: they are far more likely to
+# be part of a word (snake_case) than emphasis.
+_MD_MARKERS = re.compile(r"\*\*|__|\*|`+|~~")
+
+
+def strip_markdown(text):
+    """Drop the emphasis markers, keep the words and the line breaks."""
+    return _MD_MARKERS.sub("", text or "")
+
+
 _PROMPT = ChatPromptTemplate.from_template("""
 You are a helpful assistant.
 Use the following retrieved context to answer the user's question accurately.
@@ -42,7 +58,8 @@ Answer:
 def build_answer(question, docs):
     llm = get_llm()
     chain = _PROMPT | llm | StrOutputParser()
-    return chain.invoke({"context": format_docs(docs), "question": question})
+    answer = chain.invoke({"context": format_docs(docs), "question": question})
+    return strip_markdown(answer)
 
 
 def get_rag_chain(retriever):
